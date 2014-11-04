@@ -34,7 +34,10 @@ var myObj = {x: 1000, y: 1000, h: 20, w: 30};
 
 Examples 
 -----
-in *.html files.
+In *.html files.
+
+Canvas example is also available here:
+http://jsbin.com/lesudu/1/ (http://jsbin.com/lesudu/1/edit)
 
 Links
 -----
