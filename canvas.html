@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Quadtree</title>
+	<script type="text/javascript">
+		// it's for measuring performance
+		var perf = (function()
+		{
+			"use strict";
+			var timers = {};
+			return {
+				start: function start(tag)
+				{
+					var time;
+					if (window.performance) {
+						time = window.performance.now();
+					}
+					else {
+						time = +new Date();
+					}
+					timers[tag] = time;
+				},
+				stop: function stop(tag)
+				{
+					var startTime = timers[tag];
+					if (! startTime) {
+						return undefined;
+					}
+					var time;
+					if (window.performance) {
+						time = window.performance.now();
+					}
+					else {
+						time = +new Date();
+					}
+					return time - startTime;
+				}
+			}
+		}());
+	</script>
+	<script type="text/javascript" src="qtree.js"></script>
+</head>
+<body>
+<canvas id="canvas" width="2000" height="1100"></canvas>
+<script type="text/javascript">
+	var maxW = 2000,
+		maxH = 1100;
+	var elements = [];
+	for (var i = 0; i < 5000; i ++) {
+		elements.push({x: Math.round(maxW * Math.random()), y: Math.round(maxH * Math.random()), w: 1, h: 1});
+	}
+	var options = {
+		top: 0,
+		left: 0,
+		bottom: maxH,
+		right: maxW,
+		max_depth: 1,
+		max_per_cell: 20,
+		debug_mode: true
+	};
+
+perf.start('init');
+	var tree = quadtree(options);
+	tree.insert(elements);
+// @debug
+console.log( 'init ', perf.stop('init') );
+	function distancePow2(item, myItem)
+	{
+		return Math.pow(item.x - myItem.x, 2) + Math.pow(item.y - myItem.y, 2);
+	}
+
+	// it gets all points that are contained by "my" object
+	function retrieve(my)
+	{
+perf.start('retrieve_time');
+		var items = tree.queryContainedBy(my);
+// @debug
+console.log( 'retrieve time ', perf.stop('retrieve_time') );
+		return items;
+	}
+</script>
+<script type="text/javascript">
+	// it's for drawing it all on canvas
+	// @link http://stackoverflow.com/a/8290734/801426
+	var canvas = document.getElementById('canvas'),
+		canvasWidth = canvas.width,
+		canvasHeight = canvas.height,
+		ctx = canvas.getContext("2d"),
+		canvasData = ctx.createImageData(canvasWidth, canvasHeight);
+
+	// That's how you define the value of a pixel //
+	function drawPixel (x, y, r, g, b, a) {
+		var index = (x + y * canvasWidth) * 4;
+
+		canvasData.data[index + 0] = r;
+		canvasData.data[index + 1] = g;
+		canvasData.data[index + 2] = b;
+		canvasData.data[index + 3] = a;
+	}
+
+	// That's how you update the canvas, so that your
+	// modification are taken in consideration
+	function updateCanvas() {
+		ctx.putImageData(canvasData, 0, 0);
+	}
+
+	function drawAll(els)
+	{
+		canvasData = ctx.createImageData(canvasWidth, canvasHeight);
+		for (var i = 0, len = els.length; i < len; i ++) {
+			var el = els[i];
+			drawPixel(el.x, el.y, 0, 0, 0, 100);
+		}
+		updateCanvas();
+	}
+
+	drawAll(elements);
+
+	function drawSelected(els)
+	{
+		if (! els) {
+			return;
+		}
+		for (var i = 0, len = els.length; i < len; i ++) {
+			var el = els[i];
+			if (el) {
+				ctx.fillRect(el.x - 2, el.y - 2, 5, 5);
+			}
+		}
+	}
+
+	canvas.addEventListener('click', function (e) {
+		var cursor = {x: e.offsetX, y: e.offsetY, h: 20, w: 20};
+		// we get several items conteined in cursor's area
+		var items = retrieve(cursor);
+		// here we get the closest one
+		items.sort(function (a, b) {
+			return distancePow2(a, cursor) < distancePow2(b, cursor) ? -1 : 1;
+		});
+		var closest = items[0];
+		drawSelected([closest]);
+	});
+
+	canvas.addEventListener('mousemove', function (e) {
+		var cursor = {x: e.offsetX, y: e.offsetY, h: 20, w: 20};
+		// we get several items conteined in cursor's area
+		var items = retrieve(cursor);
+		// here we get the closest one
+		items.sort(function (a, b) {
+			return distancePow2(a, cursor) < distancePow2(b, cursor) ? -1 : 1;
+		});
+		var closest = items[0];
+		drawSelected([closest]);
+	});
+</script>
+</body>
+</html>

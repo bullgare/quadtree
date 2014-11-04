@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Quadtree</title>
+	<script type="text/javascript" src="qtree.js"></script>
+</head>
+<body>
+<script type="text/javascript">
+	var maxW = 2000,
+		maxH = 1100;
+	var elements = [];
+	for (var i = 0; i < 5000; i ++) {
+		elements.push({x: Math.round(maxW * Math.random()), y: Math.round(maxH * Math.random()), w: 1, h: 1});
+	}
+
+	var options = {
+		top: 0,
+		left: 0,
+		bottom: maxH,
+		right: maxW,
+		max_depth: 1,
+		max_per_cell: 20,
+		debug_mode: true
+	};
+
+	var tree = quadtree(options);
+	tree.insert(elements);
+
+	var myObj = {x: 1000, y: 1000, h: 20, w: 30};
+
+	// it gets all points that are contained by myObj
+	function retrieve()
+	{
+		var items = tree.queryContainedBy(myObj);
+		console.log( items );
+	}
+	retrieve();
+</script>
+</body>
+</html>
