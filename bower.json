@@ -1,0 +1,13 @@
+{
+  "name": "bullgare-quadtree",
+  "version": "0.1.0",
+  "main": "qtree.js",
+  "ignore": [
+    "examples/**/*.*",
+    "examples/*.*"
+  ],
+  "dependencies": {
+  },
+  "devDependencies": {
+  }
+}
