@@ -1,5 +1,7 @@
 /**
- * Quadtree by javascript
+ * Quadtree with javascript
+ * @link https://github.com/bullgare/quadtree
+ *
  * Usage:
  * To create a new Quadtree, do this:
  * var tree = Qtree.init(options)
