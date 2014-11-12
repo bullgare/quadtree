@@ -50,7 +50,7 @@ var quadtree = function(options)
 			max_per_cell: options.max_per_cell || 2,
 			max_depth: options.max_depth || 4,
 			debug_mode: options.debug_mode || false
-		}
+		};
 
 		tree = new Node(opts.top, opts.left, opts.bottom, opts.right, 0);
 	}
@@ -244,11 +244,6 @@ var quadtree = function(options)
 			return true;
 		}
 		return false;
-
-		if (x >= left && x < right && y >= top && y < bottom) {
-			return true;
-		}
-		return false;
 	}
 
 	function isArray(item)
@@ -275,11 +270,23 @@ var quadtree = function(options)
 	}
 
 	/**
+	 * It's used to sort by closeness
+	 * @param {{x: (number), y: (number)}} p1 - point 1
+	 * @param {{x: (number), y: (number)}} p2 - point 2
+	 * @returns {number} - distance between points
+	 */
+	function distancePow2(p1, p2)
+	{
+		return Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2);
+	}
+
+	/**
 	 * This function gets all real data by index data's ids.
 	 * @param {Object} index - index data stored by real data's array id
+	 * @param {{x: (number), y: (number)}} sortClosestTo - sorts all results by closeness to this coordinates
 	 * @returns {Array}
 	 */
-	function itemsByIndex(index)
+	function itemsByIndex(index, sortClosestTo)
 	{
 		var items = [];
 		for (var i in index)
@@ -288,6 +295,13 @@ var quadtree = function(options)
 				items.push(allItems[i]);
 			}
 		}
+
+		if (sortClosestTo && sortClosestTo.x !== undefined && sortClosestTo.y !== undefined) {
+			items.sort(function (a, b) {
+				return distancePow2(a, sortClosestTo) < distancePow2(b, sortClosestTo) ? -1 : 1;
+			});
+		}
+
 		return items;
 	}
 
@@ -367,7 +381,7 @@ var quadtree = function(options)
 					allItems.push(item);
 					res = tree.insert(itemToIndex(item, allItems.length - 1));
 					if (debug && ! res) {
-						throw new Error('Item not inserted (' + i + '): ' + itemAsString(item));
+						throw new Error('Item not inserted: ' + itemAsString(item));
 					}
 				}
 			}
@@ -378,9 +392,10 @@ var quadtree = function(options)
 		 * @param {number} left
 		 * @param {number} bottom
 		 * @param {number} right
+		 * @param {boolean} sortByCloseness
 		 * @returns {Array}
 		 */
-		queryRange: function _queryRange(top, left, bottom, right)
+		queryRange: function _queryRange(top, left, bottom, right, sortByCloseness)
 		{
 			if (! isNumber(top) || ! isNumber(left) || ! isNumber(bottom) || ! isNumber(right))
 			{
@@ -391,7 +406,7 @@ var quadtree = function(options)
 			}
 			var index = {};
 			tree.queryRange(top, left, bottom, right, index);
-			return itemsByIndex(index);
+			return itemsByIndex(index, sortByCloseness && {x: (left + right) / 2, y: (top + bottom) / 2});
 		},
 		/**
 		 * Get all points in a range by center coordinates, width and height
@@ -399,9 +414,10 @@ var quadtree = function(options)
 		 * @param {number} y - center y
 		 * @param {number} w - width
 		 * @param {number} h - height
+		 * @param {boolean} sortByCloseness
 		 * @returns {Array}
 		 */
-		queryRangeByCenter: function _queryRangeByCenter(x, y, w, h)
+		queryRangeByCenter: function _queryRangeByCenter(x, y, w, h, sortByCloseness)
 		{
 			if (! isNumber(x) || ! isNumber(y) || ! isNumber(w) || ! isNumber(h))
 			{
@@ -412,14 +428,15 @@ var quadtree = function(options)
 			}
 			var index = {};
 			tree.queryRange(y - h / 2, x - w / 2, y + h / 2, x + w / 2, index);
-			return itemsByIndex(index);
+			return itemsByIndex(index, sortByCloseness && {x: x, y: y});
 		},
 		/**
 		 * Get all points in a range represented by object with center coordinates, width and height
 		 * @param {{x: (number), y: (number), w: (number), h: (number)}} obj
+		 * @param {boolean} sortByCloseness
 		 * @returns {Array}
 		 */
-		queryContainedBy: function _queryContainedBy(obj)
+		queryContainedBy: function _queryContainedBy(obj, sortByCloseness)
 		{
 			if (! obj || ! isNumber(obj.x) || ! isNumber(obj.y) || ! isNumber(obj.w) || ! isNumber(obj.h))
 			{
@@ -430,7 +447,7 @@ var quadtree = function(options)
 			}
 			var index = {};
 			tree.queryRange(obj.y - obj.h / 2, obj.x - obj.w / 2, obj.y + obj.h / 2, obj.x + obj.w / 2, index);
-			return itemsByIndex(index);
+			return itemsByIndex(index, sortByCloseness && {x: obj.x, y: obj.y});
 		},
 		/**
 		 * Clears index tree
