@@ -37,7 +37,7 @@ Examples
 In *.html files.
 
 Canvas example is also available here:
-http://jsbin.com/lesudu/1/ (http://jsbin.com/lesudu/1/edit)
+http://jsbin.com/xoleziw/1/ (http://jsbin.com/xoleziw/1/edit)
 
 Links
 -----
